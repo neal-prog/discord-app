@@ -9,6 +9,7 @@ import os
 import json
 import base64
 from dotenv import load_dotenv
+import pytz  # Новая библиотека для работы с часовыми поясами
 
 # Загружаем переменные окружения
 load_dotenv()
@@ -39,6 +40,9 @@ DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
 SERVICE_ACCOUNT_JSON_BASE64 = os.getenv('SERVICE_ACCOUNT_JSON_BASE64')
 
+# Настройка часового пояса (GMT+2)
+TIMEZONE = pytz.timezone('Europe/Kiev')  # или 'Europe/Bucharest'
+
 # Проверка переменных окружения
 print(f"DISCORD_TOKEN: {'✅' if DISCORD_TOKEN else '❌'}")
 print(f"SPREADSHEET_ID: {'✅' if SPREADSHEET_ID else '❌'}")
@@ -63,6 +67,12 @@ def init_sheets():
     except Exception as e:
         logging.error(f"Ошибка подключения к Google Sheets: {e}")
         return None
+
+def get_utc_plus_2_time():
+    """Получает текущее время в UTC+2"""
+    utc_now = datetime.utcnow()
+    utc_plus_2 = pytz.utc.localize(utc_now).astimezone(TIMEZONE)
+    return utc_plus_2
 
 @bot.event
 async def on_ready():
@@ -91,15 +101,15 @@ async def on_voice_state_update(member, before, after):
 def log_voice_event(member, event_type, channel_name):
     """Запись события в Google Sheets и локальный лог"""
 
-    # Подготовка данных
-    current_time = datetime.now()
+    # Получаем время в UTC+2
+    current_time = get_utc_plus_2_time()
     date_str = current_time.strftime('%Y-%m-%d')
     time_str = current_time.strftime('%H:%M:%S')
     name = member.display_name
     username = member.name
 
     # Локальное логирование
-    log_message = f"🎤 {name} ({username}) {event_type} канал '{channel_name}' в {time_str}"
+    log_message = f"🎤 {name} ({username}) {event_type} канал '{channel_name}' в {time_str} (UTC+2)"
     print(log_message)
     logging.info(log_message)
 
