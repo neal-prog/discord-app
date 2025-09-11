@@ -1,0 +1,21 @@
+# Переменные окружения
+.env
+.env.local
+.env.production
+
+# Конфиденциальные файлы
+config.py
+service-account-key.json
+
+# Логи
+voice_logs.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
