@@ -32,6 +32,34 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+TRACKED_USERS = [
+    "David Perres",
+    "Billy Gale",
+    "Edvin",
+    "Richie Kawasaki",
+    "Aron",
+    "Isaac Yates",
+    "Angel",
+    "Virgil",
+    "Colby Tailer",
+    "Oliver Lux",
+    "Jurek",
+    "Damian Kowalski",
+    "Van Simmons",
+    "Oscar Upton",
+    "Andi_Landi",
+    "Nikitich",
+    "Adam Merch",
+    "Mason Norville",
+    "Yohan Paxton",
+    "Yuri Torres",
+    "Travis Stone",
+    "Martin Santos",
+    "Isaiah Miller",
+    "Dan Hudson",
+    "Iker Huxley"
+]
+
 # Настройка Google Sheets из переменных окружения
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
@@ -47,6 +75,7 @@ TIMEZONE = pytz.timezone('Europe/Kiev')  # или 'Europe/Bucharest'
 print(f"DISCORD_TOKEN: {'✅' if DISCORD_TOKEN else '❌'}")
 print(f"SPREADSHEET_ID: {'✅' if SPREADSHEET_ID else '❌'}")
 print(f"SERVICE_ACCOUNT_JSON_BASE64: {'✅' if SERVICE_ACCOUNT_JSON_BASE64 else '❌'}")
+print(f"TRACKED_USERS LENGTH: {len(TRACKED_USERS)}")
 
 # Инициализация Google Sheets
 def init_sheets():
@@ -74,6 +103,24 @@ def get_utc_plus_2_time():
     utc_plus_2 = pytz.utc.localize(utc_now).astimezone(TIMEZONE)
     return utc_plus_2
 
+def is_user_tracked(member):
+    """Проверяет, нужно ли отслеживать этого пользователя"""
+    # Проверяем по display_name и username
+    display_name = member.display_name
+    username = member.name
+
+    # Проверяем точное совпадение
+    if display_name in TRACKED_USERS or username in TRACKED_USERS:
+        return True
+
+    # Проверяем частичное совпадение (на случай если есть различия в регистре или пробелах)
+    for tracked_user in TRACKED_USERS:
+        if (tracked_user.lower().strip() == display_name.lower().strip() or
+            tracked_user.lower().strip() == username.lower().strip()):
+            return True
+
+    return False
+
 @bot.event
 async def on_ready():
     print(f'{bot.user} подключен к Discord!')
@@ -89,6 +136,10 @@ async def on_ready():
 @bot.event
 async def on_voice_state_update(member, before, after):
     """Обработчик изменений голосового состояния пользователя"""
+
+    # Проверяем, нужно ли отслеживать этого пользователя
+    if not is_user_tracked(member):
+        return
 
     # Пользователь присоединился к голосовому каналу
     if before.channel is None and after.channel is not None:
